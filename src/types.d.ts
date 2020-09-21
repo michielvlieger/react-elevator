@@ -1,8 +1,10 @@
 interface Elevator {
     currentFloor: number;
-    goingTo: number[];
-    goingUp: boolean;
+    onWayUp: number[];
+    onWayDown: number[];
+    isGoingUp: boolean;
 }
 
 type moveElevator = () => void;
-type addGoingTo = (goingToFloor: number) => void;
+type addGoingToOutside = (goingToFloor: number, addToUp:boolean) => void;
+type addGoingToInside = (goingToFloor: number) => void;
