@@ -1,4 +1,6 @@
 import React from 'react';
+import {OutsideButtons} from './outsideButtons'
+import {Elevator} from './elevator'
 
 interface Props {
     floorNumber: number;
@@ -11,49 +13,9 @@ export const Floor: React.FC<Props> = (props) => {
     return (
         <li>
             <div className="row">
-                <form className="col-1">
-                    <button className='btn btn-primary' onClick={e => {
-                        e.preventDefault();
-                        props.addGoingToOutside(props.floorNumber, true);
-                    }}>{"^"}</button>
-                    <button className='btn btn-primary' onClick={e => {
-                        e.preventDefault();
-                        props.addGoingToOutside(props.floorNumber, false);
-                    }}>{"ⱽ"}</button>
-                </form>
+                <OutsideButtons floorNumber={props.floorNumber} addGoingToOutside={props.addGoingToOutside}/>
                 {props.elevatorCurrentLocation === props.floorNumber
-                    ? <div className="col" style={{
-                        width: 100,
-                        height: 100,
-                        backgroundColor: "green"
-                    }}>
-                        <div className='row'>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(5)
-                            }}>5</button>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(4)
-                            }}>4</button>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(3)
-                            }}>3</button>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(2)
-                            }}>2</button>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(1)
-                            }}>1</button>
-                            <button className='btn btn-primary btn-sm col' onClick={e => {
-                                e.preventDefault();
-                                props.addGoingToInside(0)
-                            }}>0</button>
-                        </div>
-                    </div>
+                    ? <Elevator addGoingToInside={props.addGoingToInside}/>
                     : <div className="col" style={{
                         width: 100,
                         height: 100,
