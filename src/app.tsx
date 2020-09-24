@@ -19,98 +19,73 @@ function App() {
     const isGoingUp = useRef<boolean>(initialElevator.isGoingUp);
     const newestRequestId = useRef<number>(0);
 
-    const moveElevator: moveElevator = async (requestId: number) => {
+    const moveElevator: moveElevator = (onWay: number[]) => {
+        let newOnWay = onWay;
+        if (newOnWay.includes(currentFloor)) {
+            console.log('removing floor');
+            newOnWay = newOnWay.filter(floor => floor !== currentFloor);
+            isGoingUp.current ? setOnWayUp(newOnWay) : setOnWayDown(newOnWay);
+        }
+        if (isGoingUp.current ?
+            newOnWay[newOnWay.length - 1] <= currentFloor || newOnWay.length === 0 :
+            newOnWay[0] >= currentFloor || newOnWay.length === 0) {
+            console.log('test');
+            if (isGoingUp.current ?
+                onWayDown.length !== 0 :
+                onWayUp.length !== 0) {
+                console.log('changing direction');
+                isGoingUp.current = !isGoingUp.current;
+            }
+        } else {
+            console.log('moving');
+            setCurrentFloor(currentFloor => isGoingUp.current ? currentFloor + 1 : currentFloor - 1)
+        }
+    };
+
+    const activateElevator = async (requestId: number) => {
         await sleep(3000);
         if (requestId !== newestRequestId.current) {
             return
         }
-        if (isGoingUp.current) {
-            let newOnWayUp = onWayUp;
-            if (onWayUp.includes(currentFloor)) {
-                console.log('removing floor');
-                newOnWayUp = newOnWayUp.filter(floor => floor !== currentFloor);
-                setOnWayUp(newOnWayUp);
-            }
-            if (newOnWayUp.length === 0 || newOnWayUp[newOnWayUp.length - 1] <= currentFloor) {
-                console.log('test')
-                if (onWayDown.length !== 0) {
-                    console.log('changing direction');
-                    isGoingUp.current = !isGoingUp.current;
-                }
-            } else {
-                console.log('moving');
-                setCurrentFloor(currentFloor => currentFloor + 1)
-            }
-        } else {
-            let newOnWayDown = onWayDown;
-            if (onWayDown.includes(currentFloor)) {
-                console.log('removing floor');
-                newOnWayDown = newOnWayDown.filter(floor => floor !== currentFloor);
-                setOnWayUp(newOnWayDown);
-            }
-            if (newOnWayDown.length === 0 || newOnWayDown[newOnWayDown.length - 1] <= currentFloor) {
-                console.log('test')
-                if (onWayUp.length !== 0) {
-                    console.log('changing direction');
-                    isGoingUp.current = !isGoingUp.current;
-                }
-            } else {
-                console.log('moving');
-                setCurrentFloor(currentFloor => currentFloor + 1)
-            }
-            await sleep(3000);
-        }
-    }
-
-    const activateElevator = () => {
-        //remove current floor from goingto
-
-        //move elevator
-    }
+        moveElevator(isGoingUp.current ? onWayUp : onWayDown);
+    };
 
     const addGoingToOutside: addGoingToOutside = (goingToFloor: number, addToUp: boolean) => {
-        if (addToUp ? goingToFloor <= currentFloor : goingToFloor >= currentFloor) {
+        if (addToUp ? onWayDown.length === 0 && goingToFloor <= currentFloor : onWayUp.length === 0 && goingToFloor >= currentFloor) {
             addToUp = !addToUp;
         }
-        if (addToUp) {
-            setOnWayUp(onWayUp => {
-                let newOnWayUp = Array.from(onWayUp)
-                newOnWayUp.push(goingToFloor);
-                newOnWayUp.sort();
-                return newOnWayUp
-            });
-        } else {
-            setOnWayUp(onWayDown => {
-                let newOnWayDown = Array.from(onWayDown)
-                newOnWayDown.push(goingToFloor);
-                newOnWayDown.sort();
-                return newOnWayDown
-            });
-        }
+        addGoingTo(goingToFloor, addToUp);
     };
 
     const addGoingToInside: addGoingToInside = (goingToFloor: number) => {
-        if (goingToFloor > currentFloor) {
+        addGoingTo(goingToFloor, goingToFloor > currentFloor)
+    };
+
+    const addGoingTo = (goingToFloor: number, addToUp: boolean) => {
+        if (addToUp) {
             setOnWayUp(onWayUp => {
-                let newOnWayUp = Array.from(onWayUp)
+                let newOnWayUp = Array.from(onWayUp);
                 newOnWayUp.push(goingToFloor);
                 newOnWayUp.sort();
                 return newOnWayUp
             });
         } else {
-            setOnWayUp(onWayDown => {
-                let newOnWayDown = Array.from(onWayDown)
+            setOnWayDown(onWayDown => {
+                let newOnWayDown = Array.from(onWayDown);
                 newOnWayDown.push(goingToFloor);
                 newOnWayDown.sort();
                 return newOnWayDown
             });
         }
     };
+
     useEffect(() => {
-        console.log('activate');
+        console.log(onWayUp);
+        console.log(onWayDown);
         newestRequestId.current = newestRequestId.current + 1;
-        moveElevator(newestRequestId.current);
-    })
+        activateElevator(newestRequestId.current);
+    });
+
     return (
         <div className='container'>
             <ul style={{listStyleType: "none"}}>
