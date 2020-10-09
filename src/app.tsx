@@ -41,6 +41,7 @@ export default function App() {
         const onOtherWayLength = !isGoingUp ? onWayUp.length : onWayDown.length
         const elevatorPassedFloor = isGoingUp ? onWay[onWay.length - 1] <= currentFloor : onWay[0] >= currentFloor;
         if (onWay.includes(currentFloor)) {
+            await sleep(2000);
             onWay = arriveAtFloor(onWay);
             isGoingUp ? setOnWayUp(onWay) : setOnWayDown(onWay);
         }
