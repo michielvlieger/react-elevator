@@ -6,7 +6,6 @@ const initialElevator: Elevator = {
     onWayUp: [],
     onWayDown: [],
     isGoingUp: true,
-    floors_amount: 6
 };
 
 const sleep = (milliseconds: number) => {
@@ -17,15 +16,30 @@ function App() {
     const [currentFloor, setCurrentFloor] = useState(initialElevator.currentFloor);
     const [onWayUp, setOnWayUp] = useState(initialElevator.onWayUp);
     const [onWayDown, setOnWayDown] = useState(initialElevator.onWayDown);
-    const [isGoingUp, setIsGoingUp] = useState<boolean>(initialElevator.isGoingUp);
+    const isGoingUp = useRef<boolean>(initialElevator.isGoingUp);
     const newestRequestId = useRef<number>(0);
 
-    const moveElevator: moveElevator = () => {
-        setCurrentFloor(currentFloor => isGoingUp ? currentFloor + 1 : currentFloor - 1)
-    };
-
-    const arriveAtFloor = (onWay: number[]) => {
-        return onWay.filter(floor => floor !== currentFloor);
+    const moveElevator: moveElevator = (onWay: number[]) => {
+        let newOnWay = onWay;
+        if (newOnWay.includes(currentFloor)) {
+            console.log('removing floor');
+            newOnWay = newOnWay.filter(floor => floor !== currentFloor);
+            isGoingUp.current ? setOnWayUp(newOnWay) : setOnWayDown(newOnWay);
+        }
+        if (isGoingUp.current ?
+            newOnWay[newOnWay.length - 1] <= currentFloor || newOnWay.length === 0 :
+            newOnWay[0] >= currentFloor || newOnWay.length === 0) {
+            console.log('test');
+            if (isGoingUp.current ?
+                onWayDown.length !== 0 :
+                onWayUp.length !== 0) {
+                console.log('changing direction');
+                isGoingUp.current = !isGoingUp.current;
+            }
+        } else {
+            console.log('moving');
+            setCurrentFloor(currentFloor => isGoingUp.current ? currentFloor + 1 : currentFloor - 1)
+        }
     };
 
     const activateElevator = async (requestId: number) => {
@@ -33,22 +47,7 @@ function App() {
         if (requestId !== newestRequestId.current) {
             return
         }
-        let onWay = isGoingUp ? [...onWayUp] : [...onWayDown];
-        let onOtherWayLength = !isGoingUp ? onWayUp.length : onWayDown.length;
-        if (onWay.includes(currentFloor)) {
-            onWay = arriveAtFloor(onWay);
-            isGoingUp? setOnWayUp(onWay): setOnWayDown(onWay);
-        }
-        if (onWay.length === 0  || (isGoingUp ?
-            onWay[onWay.length - 1] <= currentFloor :
-            onWay[0] >= currentFloor)) {
-            if (onOtherWayLength > 0) {
-                console.log('changing direction');
-                setIsGoingUp(!isGoingUp);
-            }
-        } else {
-            moveElevator();
-        }
+        moveElevator(isGoingUp.current ? onWayUp : onWayDown);
     };
 
     const addGoingToOutside: addGoingToOutside = (goingToFloor: number, addToUp: boolean) => {
@@ -81,8 +80,8 @@ function App() {
     };
 
     useEffect(() => {
-        // console.log(onWayUp);
-        // console.log(onWayDown);
+        console.log(onWayUp);
+        console.log(onWayDown);
         newestRequestId.current = newestRequestId.current + 1;
         activateElevator(newestRequestId.current);
     });
