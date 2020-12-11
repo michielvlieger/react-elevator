@@ -1,53 +1,58 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Floor} from "./floor";
+import {ElevatorShaft} from "./elevatorShaft";
 
 const initialElevator: Elevator = {
     currentFloor: 0,
     onWayUp: [],
     onWayDown: [],
     isGoingUp: true,
+    floorsAmount: 6,
+    hasArrived: false,
 };
 
 const sleep = (milliseconds: number) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 };
 
-function App() {
+export default function App() {
     const [currentFloor, setCurrentFloor] = useState(initialElevator.currentFloor);
     const [onWayUp, setOnWayUp] = useState(initialElevator.onWayUp);
     const [onWayDown, setOnWayDown] = useState(initialElevator.onWayDown);
-    const isGoingUp = useRef<boolean>(initialElevator.isGoingUp);
+    const [isGoingUp, setIsGoingUp] = useState<boolean>(initialElevator.isGoingUp);
+    const [hasArrived, setHasArrived] = useState<boolean>(initialElevator.hasArrived);
     const newestRequestId = useRef<number>(0);
 
-    const moveElevator: moveElevator = (onWay: number[]) => {
-        let newOnWay = onWay;
-        if (newOnWay.includes(currentFloor)) {
-            console.log('removing floor');
-            newOnWay = newOnWay.filter(floor => floor !== currentFloor);
-            isGoingUp.current ? setOnWayUp(newOnWay) : setOnWayDown(newOnWay);
-        }
-        if (isGoingUp.current ?
-            newOnWay[newOnWay.length - 1] <= currentFloor || newOnWay.length === 0 :
-            newOnWay[0] >= currentFloor || newOnWay.length === 0) {
-            console.log('test');
-            if (isGoingUp.current ?
-                onWayDown.length !== 0 :
-                onWayUp.length !== 0) {
-                console.log('changing direction');
-                isGoingUp.current = !isGoingUp.current;
-            }
-        } else {
-            console.log('moving');
-            setCurrentFloor(currentFloor => isGoingUp.current ? currentFloor + 1 : currentFloor - 1)
-        }
+    const moveElevator: moveElevator = () => {
+        setHasArrived(false);
+        setCurrentFloor(currentFloor => isGoingUp ? currentFloor + 1 : currentFloor - 1)
+    };
+
+    const arriveAtFloor = (onWay: number[]) => {
+        setHasArrived(true);
+        return onWay.filter(floor => floor !== currentFloor);
     };
 
     const activateElevator = async (requestId: number) => {
-        await sleep(3000);
+        await sleep(1000);
         if (requestId !== newestRequestId.current) {
             return
         }
-        moveElevator(isGoingUp.current ? onWayUp : onWayDown);
+        let onWay = isGoingUp ? [...onWayUp] : [...onWayDown];
+        const onOtherWayLength = !isGoingUp ? onWayUp.length : onWayDown.length
+        const elevatorPassedFloor = isGoingUp ? onWay[onWay.length - 1] <= currentFloor : onWay[0] >= currentFloor;
+        if (onWay.includes(currentFloor)) {
+            await sleep(2000);
+            onWay = arriveAtFloor(onWay);
+            isGoingUp ? setOnWayUp(onWay) : setOnWayDown(onWay);
+        }
+        if (onWay.length === 0 || elevatorPassedFloor) {
+            if (onOtherWayLength > 0) {
+                console.log('changing direction');
+                setIsGoingUp(!isGoingUp);
+            }
+        } else {
+            moveElevator();
+        }
     };
 
     const addGoingToOutside: addGoingToOutside = (goingToFloor: number, addToUp: boolean) => {
@@ -80,8 +85,6 @@ function App() {
     };
 
     useEffect(() => {
-        console.log(onWayUp);
-        console.log(onWayDown);
         newestRequestId.current = newestRequestId.current + 1;
         activateElevator(newestRequestId.current);
     });
@@ -89,26 +92,9 @@ function App() {
     return (
         <div className='container'>
             <ul style={{listStyleType: "none"}}>
-                <Floor floorNumber={5} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
-                <Floor floorNumber={4} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
-                <Floor floorNumber={3} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
-                <Floor floorNumber={2} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
-                <Floor floorNumber={1} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
-                <Floor floorNumber={0} elevatorCurrentLocation={currentFloor}
-                       addGoingToOutside={addGoingToOutside}
-                       addGoingToInside={addGoingToInside}/>
+                <ElevatorShaft floorsAmount={initialElevator.floorsAmount} currentFloor={currentFloor}
+                               addGoingToOutside={addGoingToOutside} addGoingToInside={addGoingToInside}
+                               hasArrived={hasArrived}/>
             </ul>
         </div>);
 }
-
-export default App;

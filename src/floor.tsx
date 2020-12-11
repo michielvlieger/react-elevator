@@ -4,9 +4,11 @@ import {Elevator} from './elevator'
 
 interface Props {
     floorNumber: number;
-    elevatorCurrentLocation: number;
+    isElevator: boolean;
     addGoingToOutside: addGoingToOutside;
     addGoingToInside: addGoingToInside;
+    floorsAmount: number
+    hasArrived: boolean
 }
 
 export const Floor: React.FC<Props> = (props) => {
@@ -14,8 +16,8 @@ export const Floor: React.FC<Props> = (props) => {
         <li>
             <div className="row">
                 <OutsideButtons floorNumber={props.floorNumber} addGoingToOutside={props.addGoingToOutside}/>
-                {props.elevatorCurrentLocation === props.floorNumber
-                    ? <Elevator addGoingToInside={props.addGoingToInside}/>
+                {props.isElevator
+                    ? <Elevator addGoingToInside={props.addGoingToInside} floorsAmount={props.floorsAmount} hasArrived={props.hasArrived}/>
                     : <div className="col" style={{
                         width: 100,
                         height: 100,
